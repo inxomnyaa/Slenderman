@@ -1,0 +1,8 @@
+--- # Poggit-CI Manifest. Open the CI at https://poggit.pmmp.io/ci/thebigsmileXD/Spooky
+projects:
+  Spooky:
+    path: ""
+    libs:
+      - src: xenialdan\skinapi
+        version: ^0.2.0
+...
