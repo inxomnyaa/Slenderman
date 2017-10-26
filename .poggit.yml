@@ -3,6 +3,6 @@ projects:
   Spooky:
     path: ""
     libs:
-      - src: thebigsmileXD/skinapi
+      - src: thebigsmilexd/skinapi/skinapi
         version: ^0.2.0
 ...
