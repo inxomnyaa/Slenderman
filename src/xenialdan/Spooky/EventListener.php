@@ -2,8 +2,10 @@
 
 namespace xenialdan\Spooky;
 
+use pocketmine\entity\Entity;
 use pocketmine\event\entity\EntityLevelChangeEvent;
 use pocketmine\event\Listener;
+use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\event\player\PlayerMoveEvent;
 use pocketmine\event\server\DataPacketReceiveEvent;
 use pocketmine\level\Level;
@@ -28,7 +30,7 @@ class EventListener implements Listener{
 		$player = $ev->getPlayer();
 		$from = $ev->getFrom();
 		$to = $ev->getTo();
-		if ($from->distance($to) < 0.1){
+		if ($from->distanceSquared($to) < 0.1 ** 2){
 			return;
 		}
 		$maxDistance = 15;
@@ -37,18 +39,7 @@ class EventListener implements Listener{
 			if (!$e instanceof Slenderman){
 				continue;
 			}
-
-			$e->lookAt($player->add(0,$player->getEyeHeight()));
-			/*
-			$pk = new MovePlayerPacket();
-			$pk->entityRuntimeId = $e->getId();
-			$pk->position = $e->asVector3()->add(0, $e->getEyeHeight(), 0);
-			$pk->yaw = $yaw;
-			$pk->pitch = $pitch;
-			$pk->headYaw = $yaw;
-			$pk->onGround = $e->onGround;
-			$player->getServer()->broadcastPacket($e->getLevel()->getPlayers(), $pk);
-			*/
+			$e->lookAt($player);
 		}
 	}
 
@@ -78,5 +69,27 @@ class EventListener implements Listener{
 		$pk = new GameRulesChangedPacket();
 		$pk->gameRules = new GameRule('dodaylightcycle', GameRule::TYPE_BOOL, $event->getTarget()->getId() !== Server::getInstance()->getDefaultLevel()->getId());
 		$player->dataPacket($pk);
+	}
+
+	public function onJoin(PlayerJoinEvent $event){
+		$pk = new GameRulesChangedPacket();
+		$pk->gameRules = (new GameRule('dodaylightcycle', GameRule::TYPE_BOOL, $event->getPlayer()->getLevel()->getId() !== Server::getInstance()->getDefaultLevel()->getId()))->get();
+		$event->getPlayer()->dataPacket($pk);
+		$entities = $this->owner->getServer()->getDefaultLevel()->getEntities();
+		/** @var Slenderman[] $slenders */
+		$slenders = array_filter($entities, function (Entity $entity){
+			return $entity instanceof Slenderman;
+		});
+		if (count($slenders) > 1){
+			$slenderman = array_pop($slenders); //keeps one alive
+		} else{
+			$slenderman = new Slenderman($this->owner->getServer()->getDefaultLevel(), Entity::createBaseNBT($this->owner->getServer()->getDefaultLevel()->getSafeSpawn()->asVector3()));
+			if ($slenderman instanceof Entity){
+				$this->owner->getServer()->getDefaultLevel()->addEntity($slenderman);
+				$slenderman->spawnToAll();
+			}
+		}
+		foreach ($slenders as $slender)
+			$slender->getLevel()->removeEntity($slender);
 	}
 }

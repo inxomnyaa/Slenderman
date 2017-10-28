@@ -44,9 +44,10 @@ class Slenderman extends Human{
 		do{
 			$newpos = $level->getSafeSpawn($this->add((mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max)), (mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max)), (mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max))));
 			$tries++;
-		} while (!$tries >= 10 && !in_array($level->getBlock($newpos)->getSide(Vector3::SIDE_DOWN)->getId(), $allowedground));
+		} while ($tries <= 10 && !in_array($level->getBlock($newpos)->getSide(Vector3::SIDE_DOWN)->getId(), $allowedground));
 		$this->teleport($newpos);
 		$this->sendSkin($level->getPlayers());//Because the client messes this up
+		$this->lookAt($player);
 
 		$pk = new LevelEventPacket();
 		$pk->evid = LevelEventPacket::EVENT_GUARDIAN_CURSE;
@@ -71,8 +72,10 @@ class Slenderman extends Human{
 			}
 
 			public function onRun(int $currentTick){
-				if ($this->counter > 100) $this->getHandler()->cancel();
-				else{
+				if ($this->counter > 100){
+					Server::getInstance()->getScheduler()->cancelTask($this->getTaskId());
+					print "cancelled" . PHP_EOL;
+				} else{
 					if ($this->counter <= 20){
 						if (($this->counter % 2) === 0){
 							$this->player->addEffect(Effect::getEffect(Effect::NIGHT_VISION)->setDuration(5));

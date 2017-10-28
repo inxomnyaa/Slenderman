@@ -21,7 +21,7 @@ class GameRule {
 	 * @param int $type
 	 * @param mixed $value
 	 */
-	public function __construct(string $name, int $type, mixed $value){
+	public function __construct(string $name, int $type, $value){
 		$this->name = $name;
 		$this->type = $type;
 		$this->value = $value;

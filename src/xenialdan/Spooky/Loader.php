@@ -19,21 +19,10 @@ class Loader extends PluginBase{
 	public function onEnable(){
 		$this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 		//entities
-		Entity::registerEntity(Slenderman::class, true);
-		//try to stop time
+		Entity::registerEntity(Slenderman::class, true, ["spooky:slenderman"]);
+		//try to lock time
 		$this->getServer()->getDefaultLevel()->setTime(17000);
 		$this->getServer()->getDefaultLevel()->stopTime();
-		$entities = $this->getServer()->getDefaultLevel()->getEntities();
-		$slenders = array_filter($entities, function (Entity $entity){
-			return $entity instanceof Slenderman;
-		});
-		if (count($slenders) < 1){
-			$entity = new Slenderman($this->getServer()->getDefaultLevel(), Entity::createBaseNBT($this->getServer()->getDefaultLevel()->getSafeSpawn()->asVector3()));
-			if ($entity instanceof Entity){
-				$this->getServer()->getDefaultLevel()->addEntity($entity);
-				$entity->spawnToAll();
-			}
-		}
 	}
 
 	/**
