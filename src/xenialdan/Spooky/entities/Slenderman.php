@@ -72,7 +72,7 @@ class Slenderman extends Human{
 			}
 
 			public function onRun(int $currentTick){
-				if ($this->counter > 100){
+				if ($this->counter > 100 || !$this->player->isOnline()){
 					Server::getInstance()->getScheduler()->cancelTask($this->getTaskId());
 					print "cancelled" . PHP_EOL;
 				} else{

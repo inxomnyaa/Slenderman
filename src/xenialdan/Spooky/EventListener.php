@@ -2,6 +2,7 @@
 
 namespace xenialdan\Spooky;
 
+use function PMA\Util\get;
 use pocketmine\entity\Entity;
 use pocketmine\event\entity\EntityLevelChangeEvent;
 use pocketmine\event\Listener;
@@ -67,7 +68,7 @@ class EventListener implements Listener{
 		if (!($player = $event->getEntity()) instanceof Player) return;
 
 		$pk = new GameRulesChangedPacket();
-		$pk->gameRules = new GameRule('dodaylightcycle', GameRule::TYPE_BOOL, $event->getTarget()->getId() !== Server::getInstance()->getDefaultLevel()->getId());
+		$pk->gameRules = (new GameRule('dodaylightcycle', GameRule::TYPE_BOOL, $event->getEntity()->getLevel()->getId() !== Server::getInstance()->getDefaultLevel()->getId()))->get();
 		$player->dataPacket($pk);
 	}
 
@@ -78,13 +79,14 @@ class EventListener implements Listener{
 		$entities = $this->owner->getServer()->getDefaultLevel()->getEntities();
 		/** @var Slenderman[] $slenders */
 		$slenders = array_filter($entities, function (Entity $entity){
-			return $entity instanceof Slenderman;
+			return $entity->getDataProperty(Entity::DATA_NAMETAG) === "Slenderman";
 		});
 		if (count($slenders) > 1){
 			$slenderman = array_pop($slenders); //keeps one alive
 		} else{
 			$slenderman = new Slenderman($this->owner->getServer()->getDefaultLevel(), Entity::createBaseNBT($this->owner->getServer()->getDefaultLevel()->getSafeSpawn()->asVector3()));
 			if ($slenderman instanceof Entity){
+				$slenderman->setNameTag("Slenderman");
 				$this->owner->getServer()->getDefaultLevel()->addEntity($slenderman);
 				$slenderman->spawnToAll();
 			}
