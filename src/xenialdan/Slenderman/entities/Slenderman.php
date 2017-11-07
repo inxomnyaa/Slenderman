@@ -1,6 +1,6 @@
 <?php
 
-namespace xenialdan\Spooky\entities;
+namespace xenialdan\Slenderman\entities;
 
 use pocketmine\block\Block;
 use pocketmine\entity\Effect;
@@ -17,7 +17,7 @@ use pocketmine\plugin\Plugin;
 use pocketmine\scheduler\PluginTask;
 use pocketmine\Server;
 use xenialdan\skinapi\API;
-use xenialdan\Spooky\Loader;
+use xenialdan\Slenderman\Loader;
 
 class Slenderman extends Human{
 

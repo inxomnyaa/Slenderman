@@ -1,6 +1,6 @@
 <?php
 
-namespace xenialdan\Spooky\other;
+namespace xenialdan\Slenderman\other;
 
 class GameRule{
 

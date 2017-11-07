@@ -1,6 +1,6 @@
 <?php
 
-namespace xenialdan\Spooky;
+namespace xenialdan\Slenderman;
 
 use function PMA\Util\get;
 use pocketmine\entity\Entity;
@@ -16,8 +16,8 @@ use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\Player;
 use pocketmine\plugin\Plugin;
 use pocketmine\Server;
-use xenialdan\Spooky\entities\Slenderman;
-use xenialdan\Spooky\other\GameRule;
+use xenialdan\Slenderman\entities\Slenderman;
+use xenialdan\Slenderman\other\GameRule;
 
 class EventListener implements Listener{
 	/** @var Loader */

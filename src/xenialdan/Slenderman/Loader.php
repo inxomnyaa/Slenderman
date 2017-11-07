@@ -1,11 +1,11 @@
 <?php
 
-namespace xenialdan\Spooky;
+namespace xenialdan\Slenderman;
 
 
 use pocketmine\entity\Entity;
 use pocketmine\plugin\PluginBase;
-use xenialdan\Spooky\entities\Slenderman;
+use xenialdan\Slenderman\entities\Slenderman;
 
 
 class Loader extends PluginBase{
@@ -19,7 +19,7 @@ class Loader extends PluginBase{
 	public function onEnable(){
 		$this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
 		//entities
-		Entity::registerEntity(Slenderman::class, true, ["spooky:slenderman"]);
+		Entity::registerEntity(Slenderman::class, true, ["slenderman:slenderman"]);
 		//try to lock time
 		$this->getServer()->getDefaultLevel()->setTime(17000);
 		$this->getServer()->getDefaultLevel()->stopTime();
