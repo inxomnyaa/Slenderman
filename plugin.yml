@@ -1,7 +1,8 @@
   name: Slenderman
   main: xenialdan\Slenderman\Loader
-  version: 1.7.2
+  version: 1.7.3
   api: ['3.0.0-ALPHA9']
   load: POSTWORLD
   authors: [XenialDan]
   prefix: "Slenderman by XenialDan"
+  extensions: ["gd2"]
