@@ -2,7 +2,6 @@
 
 namespace xenialdan\Slenderman;
 
-
 use pocketmine\entity\Entity;
 use pocketmine\plugin\PluginBase;
 use xenialdan\Slenderman\entities\Slenderman;
@@ -31,5 +30,9 @@ class Loader extends PluginBase{
 	 */
 	public static function getInstance(){
 		return self::$instance;
+	}
+
+	public function getSkin(){
+		return $this->getFile() . 'resources/slenderman';
 	}
 }

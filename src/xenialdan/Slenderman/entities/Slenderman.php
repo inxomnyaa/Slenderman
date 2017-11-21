@@ -22,7 +22,7 @@ use xenialdan\Slenderman\Loader;
 class Slenderman extends Human{
 
 	public function __construct(Level $level, CompoundTag $nbt){
-		$path = Loader::getInstance()->getDataFolder() . 'resources/slenderman';
+		$path = Loader::getInstance()->getSkin();
 		$img = imagecreatefrompng($path . '.png');
 		$skin = new Skin('Slenderman', API::fromImage($img), "", "geometry.humanoid.custom", "");
 		imagedestroy($img);
