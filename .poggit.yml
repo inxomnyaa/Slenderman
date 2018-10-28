@@ -3,6 +3,6 @@ projects:
   Slenderman:
     path: ""
     libs:
-      - src: thebigsmilexd/skinapi/skinapi
-        version: ^0.2.0
+    - src: thebigsmilexd/skinapi/skinapi
+      version: ^0.2.0
 ...
