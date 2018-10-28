@@ -49,7 +49,6 @@ class Slenderman extends Human
             $tries++;
         } while ($tries <= 10 && !in_array($level->getBlock($newpos)->getSide(Facing::DOWN)->getId(), $allowedground));
         $this->teleport($newpos);
-        $this->sendSkin($level->getPlayers());//Because the client messes this up
         $this->lookAt($player);
 
         $pk = new LevelEventPacket();
