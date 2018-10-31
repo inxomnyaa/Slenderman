@@ -11,6 +11,7 @@ use pocketmine\entity\Skin;
 use pocketmine\level\Level;
 use pocketmine\level\sound\GenericSound;
 use pocketmine\math\Facing;
+use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\Player;
@@ -39,7 +40,7 @@ class Slenderman extends Human
     public function triggerTeleport(Player $player)
     {
         $level = $player->getLevel();
-        $allowedground = [Block::PODZOL, Block::STAINED_CLAY, Block::DIRT, Block::CONCRETE_POWDER];
+        $allowedground = [Block::PODZOL, Block::STAINED_CLAY, Block::DIRT, Block::CONCRETE_POWDER, Block::GRASS, Block::GRASS_PATH, Block::GRAVEL];
         $min = 10;
         $max = 20;
         //teleport it to a save spot min to max blocks away
@@ -47,8 +48,9 @@ class Slenderman extends Human
         do {
             $newpos = $level->getSafeSpawn($this->add((mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max)), (mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max)), (mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max))));
             $tries++;
-        } while ($tries <= 10 && !in_array($level->getBlock($newpos)->getSide(Facing::DOWN)->getId(), $allowedground));
+        } while ($tries <= 10 && !in_array($level->getBlock($newpos)->getSide(Vector3::SIDE_DOWN)->getId(), $allowedground));
         $this->teleport($newpos);
+        Loader::getInstance()->getLogger()->debug("Slenderman teleported to X:" . $newpos->x . " Y:" . $newpos->y . " Z:" . $newpos->z);
         $this->lookAt($player);
 
         $pk = new LevelEventPacket();
