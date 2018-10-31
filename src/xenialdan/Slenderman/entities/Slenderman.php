@@ -33,6 +33,8 @@ class Slenderman extends Human
         $this->setImmobile();
         $this->setMaxHealth(200);
         $this->setHealth(200);
+        $this->setNameTagVisible(false);
+        $this->setNameTagAlwaysVisible(false);
     }
 
     public function triggerTeleport(Player $player)
@@ -99,5 +101,13 @@ class Slenderman extends Human
         };
 
         $plugin->getScheduler()->scheduleRepeatingTask($task, 5);
+    }
+
+    public function entityBaseTick(int $tickDiff = 1): bool
+    {
+        if (time() % 20 * 5) {
+            $this->getLevel()->broadcastLevelEvent($this, LevelEventPacket::EVENT_PARTICLE_ENDERMAN_TELEPORT);
+        }
+        return parent::entityBaseTick($tickDiff);
     }
 }
