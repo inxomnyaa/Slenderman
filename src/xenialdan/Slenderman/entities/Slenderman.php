@@ -10,6 +10,7 @@ use pocketmine\entity\Human;
 use pocketmine\entity\Skin;
 use pocketmine\level\Level;
 use pocketmine\level\sound\GenericSound;
+use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\Player;
@@ -45,11 +46,16 @@ class Slenderman extends Human
         $max = 20;
         //teleport it to a save spot min to max blocks away
         $tries = 0;
-        do {
-            $newpos = $level->getSafeSpawn($this->add((mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max)), (mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max)), (mt_rand(0, 1) === 0 ? mt_rand(-$max, -$min) : mt_rand($min, $max))));
-            $tries++;
-        } while ($tries <= 10 && !in_array($level->getBlock($newpos)->getSide(0)->getId(), $allowedground));
-        $this->teleport($newpos);
+        $possibleblocks = [$this->asPosition()];
+        for ($x = $this->x - $max; $x < $this->x + $max; $x++) {
+            for ($z = $this->z - $max; $z < $this->z + $max; $z++) {
+                $pos = $level->getSafeSpawn(new Vector3($x, $this->y, $z));
+                if (in_array($level->getBlock($pos)->getSide(0)->getId(), $allowedground)) {
+                    $possibleblocks[] = $pos->asPosition();
+                }
+            }
+        }
+        $this->teleport(($newpos = $possibleblocks[array_rand($possibleblocks, 1)]));
         Loader::getInstance()->getLogger()->debug("Slenderman teleported to X:" . $newpos->x . " Y:" . $newpos->y . " Z:" . $newpos->z);
         $this->lookAt($player);
 
@@ -105,7 +111,7 @@ class Slenderman extends Human
 
     public function entityBaseTick(int $tickDiff = 1): bool
     {
-        if (time() % 20 * 5) {
+        if (time() % 20 * 10) {
             $this->getLevel()->broadcastLevelEvent($this, LevelEventPacket::EVENT_PARTICLE_ENDERMAN_TELEPORT);
         }
         return parent::entityBaseTick($tickDiff);

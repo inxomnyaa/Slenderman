@@ -1,6 +1,6 @@
 name: Slenderman
 main: xenialdan\Slenderman\Loader
-version: 1.7.5
+version: 1.8.0
 api: ['3.0.0','4.0.0']
 load: POSTWORLD
 authors: [XenialDan]
