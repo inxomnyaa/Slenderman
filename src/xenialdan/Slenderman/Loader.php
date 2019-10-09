@@ -6,7 +6,6 @@ use pocketmine\entity\Entity;
 use pocketmine\plugin\PluginBase;
 use xenialdan\Slenderman\entities\Slenderman;
 
-
 class Loader extends PluginBase
 {
     /** @var Loader */
@@ -17,9 +16,12 @@ class Loader extends PluginBase
         self::$instance = $this;
     }
 
+    /**
+     * @throws \pocketmine\plugin\PluginException
+     */
     public function onEnable()
     {
-        $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+        $this->getServer()->getPluginManager()->registerEvents(new EventListener(), $this);
         //entities
         Entity::registerEntity(Slenderman::class, true, ["slenderman:slenderman"]);
         //try to lock time

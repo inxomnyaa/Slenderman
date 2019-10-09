@@ -13,21 +13,14 @@ use pocketmine\network\mcpe\protocol\DataPacket;
 use pocketmine\network\mcpe\protocol\GameRulesChangedPacket;
 use pocketmine\network\mcpe\protocol\InteractPacket;
 use pocketmine\Player;
-use pocketmine\plugin\Plugin;
-use pocketmine\Server;
 use xenialdan\Slenderman\entities\Slenderman;
 use xenialdan\Slenderman\other\GameRule;
 
 class EventListener implements Listener
 {
-    /** @var Loader */
-    public $owner;
-
-    public function __construct(Plugin $plugin)
-    {
-        $this->owner = $plugin;
-    }
-
+    /**
+     * @param PlayerMoveEvent $ev
+     */
     public function onPlayerMove(PlayerMoveEvent $ev)
     {
         $player = $ev->getPlayer();
@@ -46,6 +39,11 @@ class EventListener implements Listener
         }
     }
 
+    /**
+     * @param DataPacketReceiveEvent $event
+     * @throws \BadMethodCallException
+     * @throws \InvalidArgumentException
+     */
     public function onPacketReceive(DataPacketReceiveEvent $event)
     {
         /** @var DataPacket $packet */
@@ -53,12 +51,12 @@ class EventListener implements Listener
         /** @var Player $player */
         if (!($player = $event->getPlayer()) instanceof Player) return;
         /** @var Level $level */
-        if (($level = $player->getLevel())->getId() !== Server::getInstance()->getDefaultLevel()->getId()) {
+        if (($level = $player->getLevel())->getId() !== Loader::getInstance()->getServer()->getDefaultLevel()->getId()) {
             return;
         }
         /** @var InteractPacket $packet */
         if ($packet instanceof InteractPacket) {
-            if (($entity = Server::getInstance()->findEntity($packet->target)) instanceof Slenderman) {
+            if (($entity = Loader::getInstance()->getServer()->findEntity($packet->target)) instanceof Slenderman) {
                 /** @var Slenderman $entity */
                 $entity->triggerTeleport($player);
                 $event->setCancelled();
@@ -66,40 +64,48 @@ class EventListener implements Listener
         }
     }
 
+    /**
+     * @param EntityLevelChangeEvent $event
+     * @throws \InvalidArgumentException
+     */
     public function levelChange(EntityLevelChangeEvent $event)
     {
         /** @var Player $player */
         if (!($player = $event->getEntity()) instanceof Player) return;
 
         $pk = new GameRulesChangedPacket();
-        $gamerule = new GameRule(GameRule::DODAYLIGHTCYCLE, GameRule::TYPE_BOOL, $player->getLevel()->getId() !== Server::getInstance()->getDefaultLevel()->getId());
+        $gamerule = new GameRule(GameRule::DODAYLIGHTCYCLE, GameRule::TYPE_BOOL, $player->getLevel()->getId() !== Loader::getInstance()->getServer()->getDefaultLevel()->getId());
         $pk->gameRules = (array)$gamerule;
         $player->sendDataPacket($pk);
     }
 
+    /**
+     * @param PlayerJoinEvent $event
+     * @throws \InvalidArgumentException
+     * @throws \pocketmine\level\LevelException
+     */
     public function onJoin(PlayerJoinEvent $event)
     {
         $pk = new GameRulesChangedPacket();
-        $gamerule = new GameRule(GameRule::DODAYLIGHTCYCLE, GameRule::TYPE_BOOL, $event->getPlayer()->getLevel()->getId() !== Server::getInstance()->getDefaultLevel()->getId());
+        $gamerule = new GameRule(GameRule::DODAYLIGHTCYCLE, GameRule::TYPE_BOOL, $event->getPlayer()->getLevel()->getId() !== Loader::getInstance()->getServer()->getDefaultLevel()->getId());
         $pk->gameRules = (array)$gamerule;
         $event->getPlayer()->sendDataPacket($pk);
-        $entities = $this->owner->getServer()->getDefaultLevel()->getEntities();
+        $entities = Loader::getInstance()->getServer()->getDefaultLevel()->getEntities();
         /** @var Slenderman[] $slenders */
         $slenders = array_filter($entities, function (Entity $entity) {
-            return $entity->getDataPropertyManager()->getString(Entity::DATA_NAMETAG) === "Slenderman";
+            return $entity instanceof Slenderman;
         });
         if (count($slenders) >= 1) {
-            $slenderman = array_pop($slenders); //keeps one alive
+            array_pop($slenders);//keeps one alive
+            //remove leftover slenders
+            foreach ($slenders as $slender)
+                $slender->getLevel()->removeEntity($slender);
         } else {
-            $slenderman = new Slenderman($this->owner->getServer()->getDefaultLevel(), Entity::createBaseNBT($this->owner->getServer()->getDefaultLevel()->getSafeSpawn()->asVector3()));
+            $slenderman = new Slenderman(Loader::getInstance()->getServer()->getDefaultLevel(), Entity::createBaseNBT(Loader::getInstance()->getServer()->getDefaultLevel()->getSafeSpawn()->asVector3()));
             if ($slenderman instanceof Entity) {
-                $slenderman->setNameTag("Slenderman");
-                $this->owner->getServer()->getDefaultLevel()->addEntity($slenderman);
+                Loader::getInstance()->getServer()->getDefaultLevel()->addEntity($slenderman);
                 $slenderman->spawnToAll();
             }
         }
-        foreach ($slenders as $slender)
-            $slender->getLevel()->removeEntity($slender);
-        $slenderman->spawnTo($event->getPlayer());
     }
 }
