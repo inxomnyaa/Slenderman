@@ -37,7 +37,7 @@ class Slenderman extends Human
         imagedestroy($img);
         $this->setSkin($skin);
         parent::__construct($level, $nbt);
-        $this->getDataPropertyManager()->setFloat(self::DATA_SCALE, 1.3);
+        $this->getDataPropertyManager()->setFloat(self::DATA_SCALE, 1.35);
         $this->setImmobile();
         $this->setMaxHealth(200);
         $this->setHealth(200);
