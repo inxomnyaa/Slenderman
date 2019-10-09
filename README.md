@@ -21,4 +21,4 @@ When nearby, he will look at the closest player.
 Players affected will shake for some seconds.
 
 # Common issues & fixes
-"gd not found" - gd must be in the PHP binarys and enabled! 
+"gd not found" - gd must be in the PHP binaries and enabled! 
