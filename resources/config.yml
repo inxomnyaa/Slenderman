@@ -1,0 +1,34 @@
+---
+# This is client sided time that will not affect server time
+# Set this to true to lock the time in the client (dodaylightcycle) in the Slenderman levels
+lock-time: true
+# Time used when lock-time is true. Default is 18000 (Midnight). https://minecraft.gamepedia.com/Day-night_cycle
+locked-time: 18000
+# Time of the level when Slenderman can spawn. Default is 13000-22550. https://minecraft.gamepedia.com/Day-night_cycle
+# If use-time-range is true, Slenderman will not spawn + automatically despawn when the level time is outside the range below
+use-time-range: false
+minimum-spawn-time: 13000
+maximum-spawn-time: 22550
+# Radius in between which the Slenderman can spawn, and how far to teleport randomly and when looked at
+minimum-spawn-radius: 10
+maximum-spawn-radius: 25
+# When too close to Slenderman, teleport the player randomly in a specific radius around the player
+teleport-nearby-players: false
+teleport-player-range: 3
+# Commands to run as the PLAYER when looking at Slenderman. {PLAYER} is a placeholder for the player's name
+player-commands: []
+# Commands to run as the CONSOLE when looking at Slenderman. {PLAYER} is a placeholder for the player's name
+console-commands: []
+# Randomised messages to send to the player when he looks at Slenderman. {PLAYER} is a placeholder for the player's name
+spook-messages:
+- "§kXXX§r§o§fHe is looking at you..§r§kXXX"
+- "§kXXX§r§o§fHe watches you yet has no sight..§r§kXXX"
+- "§kXXX§r§o§fPray you don't see him again..§r§kXXX"
+# Names of worlds the Slenderman can appear in, if left empty, the default world will be used
+# Example: ["lobby","halloween"]
+worlds: []
+# If set to true, the Slenderman will spawn with randomized skins, located in the plugin_data/Slenderman folder
+random-skins: false
+# Maximum of Slenderman that can spawn per level
+max-count: 1
+...

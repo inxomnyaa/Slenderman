@@ -2,22 +2,17 @@
 
 namespace xenialdan\Slenderman\entities;
 
-use pocketmine\block\Block;
 use pocketmine\entity\Effect;
 use pocketmine\entity\EffectInstance;
 use pocketmine\entity\Entity;
 use pocketmine\entity\Human;
-use pocketmine\entity\Skin;
 use pocketmine\event\entity\EntityDamageEvent;
 use pocketmine\level\Level;
 use pocketmine\level\sound\GenericSound;
-use pocketmine\math\Vector3;
 use pocketmine\nbt\tag\CompoundTag;
 use pocketmine\network\mcpe\protocol\LevelEventPacket;
 use pocketmine\Player;
-use pocketmine\plugin\Plugin;
 use pocketmine\scheduler\Task;
-use xenialdan\skinapi\API;
 use xenialdan\Slenderman\Loader;
 
 class Slenderman extends Human
@@ -31,11 +26,8 @@ class Slenderman extends Human
      */
     public function __construct(Level $level, CompoundTag $nbt)
     {
-        $path = Loader::getInstance()->getSkin();
-        $img = imagecreatefrompng($path . '.png');
-        $skin = new Skin('Slenderman', API::fromImage($img), "", "geometry.humanoid.custom", "");
-        imagedestroy($img);
-        $this->setSkin($skin);
+        $this->setCanSaveWithChunk(false);
+        $this->setSkin(Loader::getInstance()->getRandomSkin());
         parent::__construct($level, $nbt);
         $this->getDataPropertyManager()->setFloat(self::DATA_SCALE, 1.35);
         $this->setImmobile();
@@ -51,33 +43,57 @@ class Slenderman extends Human
         parent::spawnTo($player);
     }
 
+    public function entityBaseTick(int $tickDiff = 1): bool
+    {
+        // Remove if "daytime"
+        if (!Loader::getInstance()->inTimeRange($this->getLevel()->getTime() % Level::TIME_FULL)) {
+            $this->close();
+            return false;
+        }
+        // Randomly teleport
+        if ($this->ticksLived % 20 === mt_rand(0, 20) && mt_rand(0, 100) === 0) {
+            $this->getLevel()->broadcastLevelEvent($this, LevelEventPacket::EVENT_PARTICLE_ENDERMAN_TELEPORT);
+            $this->triggerTeleport();
+            $this->getLevel()->broadcastLevelEvent($this, LevelEventPacket::EVENT_PARTICLE_ENDERMAN_TELEPORT);
+            return true;
+        }
+        // Find closest player
+        $player = $this->getLevel()->getNearestEntity($this, max(15, Loader::getInstance()->getPlayerTeleportRange() * 2), Player::class);
+        // No need to update, return
+        if (!$player instanceof Player) return false;
+        // Look at player, add particles
+        $this->lookAt($player);
+        if ($this->ticksLived % (20 * 10) === 0) {
+            $this->getLevel()->broadcastLevelEvent($this, LevelEventPacket::EVENT_PARTICLE_ENDERMAN_TELEPORT);
+        }
+        // Teleport player if too close
+        if (Loader::getInstance()->canTeleportNearbyPlayers() && $this->distanceSquared($player) <= Loader::getInstance()->getPlayerTeleportRange()) {
+            $rad = deg2rad(mt_rand(0, 360));
+            $player->teleport($player->getLevel()->getSafeSpawn($player->add(Loader::getInstance()->getPlayerTeleportRange() * cos($rad), 1, Loader::getInstance()->getPlayerTeleportRange() * sin($rad))));
+        }
+        return Entity::entityBaseTick($tickDiff);
+    }
+
     /**
+     * Teleport the Slender
+     */
+    public function triggerTeleport()
+    {
+        $rad = deg2rad(mt_rand(0, 360));
+        $this->teleport(($newpos = $this->getLevel()->getSafeSpawn($this->add(Loader::getInstance()->getRandomSpawnRadius() * cos($rad), 1, Loader::getInstance()->getRandomSpawnRadius() * sin($rad)))));
+        Loader::getInstance()->getLogger()->debug("Slenderman teleported to X:" . $newpos->x . " Y:" . $newpos->y . " Z:" . $newpos->z);
+    }
+
+    /**
+     * Plays the effects on the player
      * @param Player $player
      * @throws \InvalidArgumentException
      */
-    public function triggerTeleport(Player $player)
+    public function scarePlayer(Player $player)
     {
+        Loader::getInstance()->executeCommands($player);
+        Loader::getInstance()->sendRandomSpookMessage($player);
         $level = $player->getLevel();
-        $allowedground = [Block::PODZOL, Block::STAINED_CLAY, Block::DIRT, Block::CONCRETE_POWDER, Block::GRASS, Block::GRASS_PATH, Block::GRAVEL];
-        $max = 25;
-        $possibleblocks = [];
-        //teleport it to a save spot min to max blocks away
-        for ($x = $this->x - $max; $x < $this->x + $max; $x++) {
-            for ($z = $this->z - $max; $z < $this->z + $max; $z++) {
-                $pos = $level->getSafeSpawn(new Vector3($x, $this->y, $z));
-                if (in_array($level->getBlock($pos)->getSide(0)->getId(), $allowedground)) {
-                    $possibleblocks[] = $pos->asPosition();
-                }
-            }
-        }
-        //Set at least one position to go to, ignoring any $allowedground (for levels without any of those blocks)
-        if (empty($possibleblocks)) {
-            $possibleblocks[] = $level->getSafeSpawn(new Vector3(mt_rand($this->x - $max, $this->x + $max), $this->y, mt_rand($this->x - $max, $this->x + $max)));
-        }
-        $this->teleport(($newpos = $possibleblocks[array_rand($possibleblocks, 1)]));
-        Loader::getInstance()->getLogger()->debug("Slenderman teleported to X:" . $newpos->x . " Y:" . $newpos->y . " Z:" . $newpos->z);
-        $this->lookAt($player);
-
         $pk = new LevelEventPacket();
         $pk->evid = LevelEventPacket::EVENT_GUARDIAN_CURSE;
         $pk->data = 0;
@@ -89,18 +105,16 @@ class Slenderman extends Human
         $player->addEffect(new EffectInstance(Effect::getEffect(Effect::BLINDNESS), 4 * 20));
         $player->addEffect(new EffectInstance(Effect::getEffect(Effect::NAUSEA), 5 * 20));
         $player->setDataFlag(Entity::DATA_FLAGS, Entity::DATA_FLAG_VIBRATING, true);
-        $plugin = Loader::getInstance();
-        $task = new class($plugin, $player) extends Task
+        // Flashing screen, stop vibration after 5 seconds
+        $task = new class($player) extends Task
         {
             private $counter = 0;
             /** @var Player */
             private $player;
-            private $plugin;
 
-            public function __construct(Plugin $owner, Player $player)
+            public function __construct(Player $player)
             {
                 $this->player = $player;
-                $this->plugin = $owner;
             }
 
             public function onRun(int $currentTick)
@@ -126,15 +140,9 @@ class Slenderman extends Human
             }
         };
 
-        $plugin->getScheduler()->scheduleRepeatingTask($task, 5);
-    }
+        Loader::getInstance()->getScheduler()->scheduleRepeatingTask($task, 5);
 
-    public function entityBaseTick(int $tickDiff = 1): bool
-    {
-        if ($this->ticksLived % (20 * 10) === 0) {
-            $this->getLevel()->broadcastLevelEvent($this, LevelEventPacket::EVENT_PARTICLE_ENDERMAN_TELEPORT);
-        }
-        return Entity::entityBaseTick($tickDiff);
+        $this->triggerTeleport();
     }
 
     //Remove gravity
